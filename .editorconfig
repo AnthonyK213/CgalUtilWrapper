@@ -1,0 +1,12 @@
+# top-most EditorConfig file
+root = true
+
+# Don't use tabs for indentation.
+[*]
+indent_style = space
+
+# Code files
+[*.{cs,csx,h,hpp,cpp}]
+indent_size = 4
+insert_final_newline = true
+charset = utf-8-bom
