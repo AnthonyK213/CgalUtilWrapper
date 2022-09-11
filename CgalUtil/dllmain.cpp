@@ -33,15 +33,7 @@ PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
             return;
         }
 
-        try
-        {
-            poly.add_hole(hole);
-        }
-        catch (std::exception& e)
-        {
-            isValid = false;
-            return;
-        }
+        poly.add_hole(hole);
     }
 }
 
@@ -133,9 +125,17 @@ int PolyShape2dGenerateOffsetPolygon()
     return 0;
 }
 
-int PolyShape2dDrop(PolyShape2d* handle)
+void PolyShape2dDrop(PolyShape2d* handle)
 {
-    // 先简单写写
     delete handle;
-    return 0;
+}
+
+void FreePoly2dMembers(Poly2d* handle)
+{
+    if (handle != nullptr)
+    {
+        delete handle->vertices;
+        handle->vertices = nullptr;
+        handle->verticesCount = 0;
+    }
 }

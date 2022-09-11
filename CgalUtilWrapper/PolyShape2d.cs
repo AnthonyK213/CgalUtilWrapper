@@ -11,7 +11,9 @@ namespace CgalUtilWrapper
     public class PolyShape2d : IDisposable
     {
         private readonly IntPtr _handle = IntPtr.Zero;
+
         public bool IsDisposed { get; private set; } = false;
+
         public bool IsValid => _handle != IntPtr.Zero;
 
         public PolyShape2d(Curve outer, IEnumerable<Curve> inner)
@@ -46,7 +48,26 @@ namespace CgalUtilWrapper
                     vertices.Add(segments.PointAtStart.Y);
                     _count++;
                 }
+
                 innerVerticesCount.Add(_count);
+            }
+
+            for (int i = 0; i < inner.Count(); ++i)
+            {
+                for (int j = i + 1; j < inner.Count(); ++j)
+                {
+                    (Curve _a, Curve _b) = (inner.ElementAt(i), inner.ElementAt(j));
+                    var _abb = _a.GetBoundingBox(false);
+                    var _bbb = _b.GetBoundingBox(false);
+
+                    if (Intersection.CurveCurve(_a, _b, 0.1, 0.1).Any()
+                        || _abb.Contains(_bbb, false)
+                        || _bbb.Contains(_abb, false))
+                    {
+                        _handle = IntPtr.Zero;
+                        return;
+                    }
+                }
             }
 
             double[] vArray = vertices.ToArray();
@@ -122,6 +143,11 @@ namespace CgalUtilWrapper
                 {
                     return false;
                 }
+                finally
+                {
+                    FreePoly2dMembers(&outStraightSkeleton);
+                    FreePoly2dMembers(&outSpokes);
+                }
             }
         }
 
@@ -165,7 +191,10 @@ namespace CgalUtilWrapper
         extern private static int PolyShape2dGenerateOffsetPolygon();
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static int PolyShape2dDrop(IntPtr handle);
+        extern private static void PolyShape2dDrop(IntPtr handle);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        extern private static unsafe void FreePoly2dMembers(Poly2d* handle);
 
         [StructLayout(LayoutKind.Sequential)]
         private unsafe struct Poly2d

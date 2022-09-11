@@ -44,8 +44,10 @@ private:
 
 CU_API PolyShape2d* PolyShape2dNew(Poly2d* outer, Poly2d* holes, int holesCount);
 
-CU_API int PolyShape2dGenerateStraightSkeleton(PolyShape2d* css, Poly2d* outStraightSkeleton, Poly2d* outSpokes);
+CU_API int PolyShape2dGenerateStraightSkeleton(PolyShape2d* handle, Poly2d* outStraightSkeleton, Poly2d* outSpokes);
 
 CU_API int PolyShape2dGenerateOffsetPolygon();
 
-CU_API int PolyShape2dDrop(PolyShape2d* css);
+CU_API void PolyShape2dDrop(PolyShape2d* handle);
+
+CU_API void FreePoly2dMembers(Poly2d* handle);
