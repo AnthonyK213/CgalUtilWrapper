@@ -12,59 +12,127 @@ namespace CgalUtilWrapper
     {
         private readonly IntPtr _handle = IntPtr.Zero;
 
+        private string _error = "";
+
         public bool IsDisposed { get; private set; } = false;
 
         public bool IsValid => _handle != IntPtr.Zero;
 
-        public PolyShape2d(Curve outer, IEnumerable<Curve> inner)
+        public string Error => _error;
+
+        public PolyShape2d(Polyline outer, IEnumerable<Polyline> inner)
         {
             int outerVerticesCount = 0;
             List<int> innerVerticesCount = new List<int>();
             List<double> vertices = new List<double>();
 
-            foreach (Curve segment in outer.DuplicateSegments())
+            if (!outer.IsClosed)
             {
-                vertices.Add(segment.PointAtStart.X);
-                vertices.Add(segment.PointAtStart.Y);
-                outerVerticesCount++;
+                _error = "Outer polyline is not closed.";
+                return;
             }
 
-            var outerBox = outer.GetBoundingBox(false);
+            var outerBox = outer.BoundingBox;
+            var outerCurve = outer.ToNurbsCurve();
 
-            foreach (Curve curve in inner)
+            if (!outerCurve.TryGetPlane(out Plane outerPlane, 0.01))
             {
-                int _count = 0;
+                _error = "Outer polyline is not planar.";
+                return;
+            }
 
-                if (Intersection.CurveCurve(outer, curve, 0.1, 0.1).Any()
-                    || !outerBox.Contains(curve.GetBoundingBox(false), false))
+            int outerPara = Brep.CreatePlanarBreps(outerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
+
+            if (outerPara == 0 || Math.Abs(outerPlane.OriginZ) > 1e-8)
+            {
+                _error = "Outer polyline is not in WorldXY plane.";
+                return;
+            }
+            else if (outerPara == 1)
+            {
+                for (int i = 0; i < outer.Count - 1; ++i)
                 {
-                    _handle = IntPtr.Zero;
+                    vertices.Add(outer[i].X);
+                    vertices.Add(outer[i].Y);
+                }
+            }
+            else
+            {
+                for (int i = outer.Count - 1; i >= 1; --i)
+                {
+                    vertices.Add(outer[i].X);
+                    vertices.Add(outer[i].Y);
+                }
+            }
+
+            outerVerticesCount = outer.Count - 1;
+
+            foreach (Polyline poly in inner)
+            {
+                var innerBox = poly.BoundingBox;
+                var innerCurve = poly.ToNurbsCurve();
+
+                if (!poly.IsClosed)
+                {
+                    _error = "An inner polyline is not closed.";
                     return;
                 }
 
-                foreach (Curve segments in curve.DuplicateSegments())
+                if (Intersection.CurveCurve(outerCurve, innerCurve, 0.1, 0.1).Any()
+                    || !outerBox.Contains(innerBox))
                 {
-                    vertices.Add(segments.PointAtStart.X);
-                    vertices.Add(segments.PointAtStart.Y);
-                    _count++;
+                    _handle = IntPtr.Zero;
+                    _error = "Invalid position between outer polyline and inner polylines.";
+                    return;
                 }
 
-                innerVerticesCount.Add(_count);
+                if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
+                {
+                    _error = "An inner polyline is not planar.";
+                    return;
+                }
+
+                int innerPara = Brep.CreatePlanarBreps(innerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
+
+                if (innerPara == 0 || Math.Abs(innerPlane.OriginZ) > 1e-8)
+                {
+                    _error = "An inner polyline is not in WorldXY plane.";
+                    return;
+                }
+                else if (innerPara == 1)
+                {
+                    for (int i = poly.Count - 1; i >= 1; --i)
+                    {
+                        vertices.Add(poly[i].X);
+                        vertices.Add(poly[i].Y);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < poly.Count - 1; ++i)
+                    {
+                        vertices.Add(poly[i].X);
+                        vertices.Add(poly[i].Y);
+                    }
+                }
+
+                innerVerticesCount.Add(poly.Count - 1);
             }
 
             for (int i = 0; i < inner.Count(); ++i)
             {
                 for (int j = i + 1; j < inner.Count(); ++j)
                 {
-                    (Curve _a, Curve _b) = (inner.ElementAt(i), inner.ElementAt(j));
-                    var _abb = _a.GetBoundingBox(false);
-                    var _bbb = _b.GetBoundingBox(false);
+                    (Curve _a, Curve _b) = (inner.ElementAt(i).ToNurbsCurve(), inner.ElementAt(j).ToNurbsCurve());
+                    var _abb = inner.ElementAt(i).BoundingBox;
+                    var _bbb = inner.ElementAt(j).BoundingBox;
 
                     if (Intersection.CurveCurve(_a, _b, 0.1, 0.1).Any()
                         || _abb.Contains(_bbb, false)
                         || _bbb.Contains(_abb, false))
                     {
                         _handle = IntPtr.Zero;
+                        _error = "Invalid position among inner polylines.";
                         return;
                     }
                 }
@@ -104,13 +172,15 @@ namespace CgalUtilWrapper
                 catch
                 {
                     _handle = IntPtr.Zero;
+                    _error = "Unknown error.";
                 }
             }
         }
 
-        public bool GenerateStraightSkeleton(out List<Line> straightSkeleton)
+        public bool GenerateStraightSkeleton(out List<Line> straightSkeleton, out List<Line> spokes)
         {
             straightSkeleton = new List<Line>();
+            spokes = new List<Line>();
 
             if (IsDisposed || !IsValid)
             {
@@ -135,6 +205,13 @@ namespace CgalUtilWrapper
                         straightSkeleton.Add(new Line(
                             new Point3d(outStraightSkeleton._vertices[2 * i + 0], outStraightSkeleton._vertices[2 * i + 1], 0),
                             new Point3d(outStraightSkeleton._vertices[2 * i + 2], outStraightSkeleton._vertices[2 * i + 3], 0)));
+                    }
+
+                    for (int i = 0; i < outSpokes._verticesCount; i += 2)
+                    {
+                        spokes.Add(new Line(
+                            new Point3d(outSpokes._vertices[2 * i + 0], outSpokes._vertices[2 * i + 1], 0),
+                            new Point3d(outSpokes._vertices[2 * i + 2], outSpokes._vertices[2 * i + 3], 0)));
                     }
 
                     return true;
@@ -169,7 +246,7 @@ namespace CgalUtilWrapper
 
             if (disposing)
             {
-
+                _error = null;
             }
 
             PolyShape2dDrop(_handle);

@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include "PolyShape2d.h"
 
 PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
 {
@@ -54,11 +55,11 @@ int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* o
     Ss& ss = *iss;
 
     // Create skeleton result (large enough to hold *all* vertices, we'll trim it later)
-    outStraightSkeleton->verticesCount = ss.size_of_halfedges() * 2 * 2;	// edges * 2 (start and end) * 2 (X and Y)
+    outStraightSkeleton->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
     outStraightSkeleton->vertices = new double[outStraightSkeleton->verticesCount];
 
-    // Create spoke result  (large enough to hold *all* vertices, we'll trim it later)
-    outSpokes->verticesCount = ss.size_of_halfedges() * 2 * 2;	// edges * 2 (start and end) * 2 (X and Y)
+    // Create spoke result (large enough to hold *all* vertices, we'll trim it later)
+    outSpokes->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
     outSpokes->vertices = new double[outSpokes->verticesCount];
 
     // Copy vertex pairs
@@ -70,13 +71,15 @@ int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* o
         auto end = i->opposite()->vertex();
 
         if (!i->is_bisector())
+        {
             continue;
+        }
 
-        auto startPos = start->point();
-        auto endPos = end->point();
+        auto& startPos = start->point();
+        auto& endPos = end->point();
 
-        auto startSkele = start->is_skeleton();
-        auto endSkele = end->is_skeleton();
+        bool startSkele = start->is_skeleton();
+        bool endSkele = end->is_skeleton();
 
         if (startSkele && endSkele && i->is_inner_bisector())
         {
