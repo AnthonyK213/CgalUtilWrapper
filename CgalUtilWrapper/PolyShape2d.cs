@@ -108,9 +108,9 @@ namespace CgalUtilWrapper
             }
         }
 
-        public bool GenerateStraightSkeleton(out List<Curve> straightSkeleton)
+        public bool GenerateStraightSkeleton(out List<Line> straightSkeleton)
         {
-            straightSkeleton = new List<Curve>();
+            straightSkeleton = new List<Line>();
 
             if (IsDisposed || !IsValid)
             {
@@ -134,7 +134,7 @@ namespace CgalUtilWrapper
                     {
                         straightSkeleton.Add(new Line(
                             new Point3d(outStraightSkeleton._vertices[2 * i + 0], outStraightSkeleton._vertices[2 * i + 1], 0),
-                            new Point3d(outStraightSkeleton._vertices[2 * i + 2], outStraightSkeleton._vertices[2 * i + 3], 0)).ToNurbsCurve());
+                            new Point3d(outStraightSkeleton._vertices[2 * i + 2], outStraightSkeleton._vertices[2 * i + 3], 0)));
                     }
 
                     return true;
