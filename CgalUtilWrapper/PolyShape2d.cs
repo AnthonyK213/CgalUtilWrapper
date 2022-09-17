@@ -78,17 +78,17 @@ namespace CgalUtilWrapper
                     return;
                 }
 
+                if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
+                {
+                    _error = "An inner polyline is not planar.";
+                    return;
+                }
+
                 if (Intersection.CurveCurve(outerCurve, innerCurve, 0.1, 0.1).Any()
                     || !outerBox.Contains(innerBox))
                 {
                     _handle = IntPtr.Zero;
                     _error = "Invalid position between outer polyline and inner polylines.";
-                    return;
-                }
-
-                if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
-                {
-                    _error = "An inner polyline is not planar.";
                     return;
                 }
 
@@ -128,8 +128,8 @@ namespace CgalUtilWrapper
                     var _bbb = inner.ElementAt(j).BoundingBox;
 
                     if (Intersection.CurveCurve(_a, _b, 0.1, 0.1).Any()
-                        || _abb.Contains(_bbb, false)
-                        || _bbb.Contains(_abb, false))
+                        || _abb.Contains(_bbb)
+                        || _bbb.Contains(_abb))
                     {
                         _handle = IntPtr.Zero;
                         _error = "Invalid position among inner polylines.";
