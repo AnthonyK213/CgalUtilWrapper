@@ -54,8 +54,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GeoWrapperBase.cs" />
     <Compile Include="PolyShape2d.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleMesh.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

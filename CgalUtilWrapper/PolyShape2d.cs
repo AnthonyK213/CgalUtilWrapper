@@ -5,21 +5,12 @@ using System.Text;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
 using Rhino.Geometry.Intersect;
+using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
-    public class PolyShape2d : IDisposable
+    public class PolyShape2d : GeoWrapperBase
     {
-        private readonly IntPtr _handle = IntPtr.Zero;
-
-        private string _error = "";
-
-        public bool IsDisposed { get; private set; } = false;
-
-        public bool IsValid => _handle != IntPtr.Zero;
-
-        public string Error => _error;
-
         public PolyShape2d(Polyline outer, IEnumerable<Polyline> inner)
         {
             int outerVerticesCount = 0;
@@ -222,42 +213,19 @@ namespace CgalUtilWrapper
                 }
                 finally
                 {
-                    FreePoly2dMembers(&outStraightSkeleton);
-                    FreePoly2dMembers(&outSpokes);
+                    Poly2dFreeMembers(&outStraightSkeleton);
+                    Poly2dFreeMembers(&outSpokes);
                 }
             }
         }
 
-        #region Release
-        ~PolyShape2d()
-        {
-            Dispose(false);
-            GC.SuppressFinalize(this);
-        }
+        #region Finalize
+        ~PolyShape2d() => Gc();
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected void Dispose(bool disposing)
-        {
-            if (IsDisposed) return;
-
-            if (disposing)
-            {
-                _error = null;
-            }
-
-            PolyShape2dDrop(_handle);
-
-            IsDisposed = true;
-        }
+        protected override void DropUnmanaged() => PolyShape2dDrop(_handle);
         #endregion
 
         #region FFI
-        private const string DLL = "CgalUtil.dll";
-
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static unsafe IntPtr PolyShape2dNew(Poly2d* outer, Poly2d* holes, int holesCount);
 
@@ -271,7 +239,7 @@ namespace CgalUtilWrapper
         extern private static void PolyShape2dDrop(IntPtr handle);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe void FreePoly2dMembers(Poly2d* handle);
+        extern private static unsafe void Poly2dFreeMembers(Poly2d* handle);
 
         [StructLayout(LayoutKind.Sequential)]
         private unsafe struct Poly2d

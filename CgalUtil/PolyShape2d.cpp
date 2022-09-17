@@ -3,12 +3,12 @@
 
 PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
 {
-    Polygon_2 outerPoly;
+    Polygon_2d outerPoly;
     isValid = true;
 
     for (int i = 0; i < outer->verticesCount; ++i)
     {
-        outerPoly.push_back(Point(outer->vertices[2 * i], outer->vertices[2 * i + 1]));
+        outerPoly.push_back(Point_2d(outer->vertices[2 * i], outer->vertices[2 * i + 1]));
     }
 
     if (!outerPoly.is_counterclockwise_oriented())
@@ -17,15 +17,15 @@ PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
         return;
     }
 
-    poly = Polygon_with_holes(outerPoly);
+    poly = Polygon_2d_With_Holes(outerPoly);
 
     for (int i = 0; i < holesCount; ++i)
     {
-        Polygon_2 hole;
+        Polygon_2d hole;
 
         for (int j = 0; j < holes[i].verticesCount; ++j)
         {
-            hole.push_back(Point(holes[i].vertices[2 * j], holes[i].vertices[2 * j + 1]));
+            hole.push_back(Point_2d(holes[i].vertices[2 * j], holes[i].vertices[2 * j + 1]));
         }
 
         if (!hole.is_clockwise_oriented())
@@ -40,7 +40,6 @@ PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
 
 PolyShape2d::~PolyShape2d()
 {
-
 }
 
 bool PolyShape2d::IsValid()
@@ -51,8 +50,8 @@ bool PolyShape2d::IsValid()
 int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* outSpokes)
 {
     // Construct skeleton
-    SsPtr iss = CGAL::create_interior_straight_skeleton_2(poly);
-    Ss& ss = *iss;
+    boost::shared_ptr<Straight_Skeleton_2d> iss = CGAL::create_interior_straight_skeleton_2(poly);
+    Straight_Skeleton_2d& ss = *iss;
 
     // Create skeleton result (large enough to hold *all* vertices, we'll trim it later)
     outStraightSkeleton->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
@@ -65,7 +64,7 @@ int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* o
     // Copy vertex pairs
     int ssIndex = 0;
     int bsIndex = 0;
-    for (Ss::Halfedge_const_iterator i = ss.halfedges_begin(); i != ss.halfedges_end(); ++i)
+    for (Straight_Skeleton_2d::Halfedge_const_iterator i = ss.halfedges_begin(); i != ss.halfedges_end(); ++i)
     {
         auto start = i->vertex();
         auto end = i->opposite()->vertex();
@@ -111,7 +110,6 @@ int PolyShape2d::GenerateOffsetPolygon()
     return 0;
 }
 
-
 PolyShape2d* PolyShape2dNew(Poly2d* outer, Poly2d* holes, int holesCount)
 {
     PolyShape2d* handle = new PolyShape2d(outer, holes, holesCount);
@@ -130,10 +128,13 @@ int PolyShape2dGenerateOffsetPolygon()
 
 void PolyShape2dDrop(PolyShape2d* handle)
 {
-    delete handle;
+    if (handle != nullptr)
+    {
+        delete handle;
+    }
 }
 
-void FreePoly2dMembers(Poly2d* handle)
+void Poly2dFreeMembers(Poly2d* handle)
 {
     if (handle != nullptr)
     {
