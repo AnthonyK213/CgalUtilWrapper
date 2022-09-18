@@ -1,4 +1,4 @@
-ghenv.Component.NickName = "StraightSkeletonTest"
+ghenv.Component.NickName = "StraightSkeleton"
 
 import CgalUtilWrapper as _cuw
 import Rhino.Geometry as _geo

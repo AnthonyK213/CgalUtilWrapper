@@ -48,9 +48,34 @@ void SimpleMesh::CreateOptimalBoundingBox(Point3dArray* corners)
     }
 }
 
-void SimpleMesh::CreateConvexHull(Point3dArray* coordinates, MeshEdges* edges, MeshFaces* faces)
+void SimpleMesh::CreateConvexHull(Point3dArray* coordinates, MeshFaces* faces)
 {
+    Surface_Mesh_3d hull;
+    auto& points = mesh.points();
+    CGAL::convex_hull_3(points.begin(), points.end(), hull);
 
+    coordinates->pointsCount = hull.vertices().size();
+    coordinates->coordinates = new double[coordinates->pointsCount * 3];
+
+    faces->facesCount = hull.faces().size();
+    faces->faces = new int[faces->facesCount * 3];
+
+    int i = 0;
+    for (auto& point : hull.points())
+    {
+        coordinates->coordinates[i++] = point.x();
+        coordinates->coordinates[i++] = point.y();
+        coordinates->coordinates[i++] = point.z();
+    }
+
+    int k = 0;
+    for (auto& face : hull.faces())
+    {
+        for (Surface_Mesh_3d::Halfedge_index h : hull.halfedges_around_face(hull.halfedge(face)))
+        {
+            faces->faces[k++] = hull.target(h);
+        }
+    }
 }
 
 SimpleMesh* SimpleMeshNew(Point3dArray* vertices, MeshEdges* edges, MeshFaces* faces)
@@ -64,9 +89,9 @@ void SimpleMeshCreateOptimalBoundingBox(SimpleMesh* handle, Point3dArray* corner
     handle->CreateOptimalBoundingBox(corners);
 }
 
-void SimpleMeshCreateConvexHull(SimpleMesh* handle, Point3dArray* vertices, MeshEdges* edges, MeshFaces* faces)
+void SimpleMeshCreateConvexHull(SimpleMesh* handle, Point3dArray* vertices, MeshFaces* faces)
 {
-    handle->CreateConvexHull(vertices, edges, faces);
+    handle->CreateConvexHull(vertices, faces);
 }
 
 void SimpleMeshDrop(SimpleMesh* handle)
@@ -74,5 +99,25 @@ void SimpleMeshDrop(SimpleMesh* handle)
     if (handle != nullptr)
     {
         delete handle;
+    }
+}
+
+void MeshEdgesFreeMembers(MeshEdges* handle)
+{
+    if (handle != nullptr)
+    {
+        delete handle->edges;
+        handle->edges = nullptr;
+        handle->edgesCount = 0;
+    }
+}
+
+void MeshFacesFreeMembers(MeshFaces* handle)
+{
+    if (handle != nullptr)
+    {
+        delete handle->faces;
+        handle->faces = nullptr;
+        handle->facesCount = 0;
     }
 }

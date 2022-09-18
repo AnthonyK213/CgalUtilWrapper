@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
+using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
@@ -21,7 +22,12 @@ namespace CgalUtilWrapper
             m.FillHoles();
             m.RebuildNormals();
 
-            if (!m.IsValid || !m.IsClosed) return;
+            if (!m.IsValid || !m.IsClosed)
+            {
+                _handle = IntPtr.Zero;
+                _error = "Mesh is not valid.";
+                return;
+            }
 
             int _verticesCount = m.Vertices.Count;
             double[] _vertices = new double[_verticesCount * 3];
@@ -70,9 +76,10 @@ namespace CgalUtilWrapper
             }
         }
 
-        public bool CreateOptimalBoundingBox(out Point3d[] corners)
+        public bool CreateOptimalBoundingBox(out Box box)
         {
-            corners = new Point3d[8];
+            box = Box.Empty;
+            Point3d[] corners = new Point3d[8];
 
             if (IsDisposed || !IsValid)
             {
@@ -93,6 +100,15 @@ namespace CgalUtilWrapper
                             outCorners._coordinates[3 * i + 1],
                             outCorners._coordinates[3 * i + 2]);
                     }
+                    List<Vector3d> axis = new List<Vector3d>
+                    {
+                        corners[1] - corners[0],
+                        corners[3] - corners[0],
+                        corners[5] - corners[0]
+                    };
+                    axis.Sort((a, b) => b.Length.CompareTo(a.Length));
+                    Plane plane = new Plane(corners[0], axis[0], axis[1]);
+                    box = new Box(plane, corners);
                     return true;
                 }
                 catch
@@ -102,6 +118,49 @@ namespace CgalUtilWrapper
                 finally
                 {
                     Point3dArrayFreeMembers(&outCorners);
+                }
+            }
+        }
+
+        public bool CreateConvexHull(out Mesh hull)
+        {
+            hull = new Mesh();
+
+            Point3dArray points;
+            MeshFaces faces;
+
+            unsafe
+            {
+                try
+                {
+                    SimpleMeshCreateConvexHull(_handle, &points, &faces);
+                    Point3d[] hullPoints = new Point3d[points._pointsCount];
+                    int[] hullFaces = new int[faces._facesCount];
+
+                    for (int i = 0; i < points._pointsCount; ++i)
+                    {
+                        hull.Vertices.Add(new Point3d(points._coordinates[3 * i + 0],
+                                                      points._coordinates[3 * i + 1],
+                                                      points._coordinates[3 * i + 2]));
+                    }
+
+                    for (int i = 0; i < faces._facesCount; ++i)
+                    {
+                        hull.Faces.AddFace(new MeshFace(faces._faces[3 * i + 0],
+                                                        faces._faces[3 * i + 1],
+                                                        faces._faces[3 * i + 2]));
+                    }
+
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+                finally
+                {
+                    Point3dArrayFreeMembers(&points);
+                    MeshFacesFreeMembers(&faces);
                 }
             }
         }
@@ -120,10 +179,19 @@ namespace CgalUtilWrapper
         extern private static unsafe void SimpleMeshCreateOptimalBoundingBox(IntPtr handle, Point3dArray* corners);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        extern private unsafe static IntPtr SimpleMeshCreateConvexHull(IntPtr handle, Point3dArray* vertices, MeshFaces* faces);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static void SimpleMeshDrop(IntPtr handle);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static unsafe void Point3dArrayFreeMembers(Point3dArray* handle);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        extern private static unsafe void MeshEdgesFreeMembers(MeshEdges* handle);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        extern private static unsafe void MeshFacesFreeMembers(MeshFaces* handle);
 
         [StructLayout(LayoutKind.Sequential)]
         private unsafe struct Point3dArray
