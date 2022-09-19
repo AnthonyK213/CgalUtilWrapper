@@ -62,8 +62,11 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Test\CgalTest.gh" />
+    <None Include="Test\spec\config.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Test\spec\ConvexHull.py" />
+    <Content Include="Test\spec\OptimalBoundingBox.py" />
     <Content Include="Test\spec\StraightSkeleton.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
