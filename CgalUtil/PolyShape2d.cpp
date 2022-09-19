@@ -49,15 +49,17 @@ bool PolyShape2d::IsValid()
 
 int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* outSpokes)
 {
-    // Construct skeleton
     boost::shared_ptr<Straight_Skeleton_2d> iss = CGAL::create_interior_straight_skeleton_2(poly);
     Straight_Skeleton_2d& ss = *iss;
 
-    // Create skeleton result (large enough to hold *all* vertices, we'll trim it later)
+    if (!iss->is_valid())
+    {
+        return 1;
+    }
+
     outStraightSkeleton->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
     outStraightSkeleton->vertices = new double[outStraightSkeleton->verticesCount];
 
-    // Create spoke result (large enough to hold *all* vertices, we'll trim it later)
     outSpokes->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
     outSpokes->vertices = new double[outSpokes->verticesCount];
 

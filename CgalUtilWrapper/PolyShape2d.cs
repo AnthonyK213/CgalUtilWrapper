@@ -26,6 +26,15 @@ namespace CgalUtilWrapper
             var outerBox = outer.BoundingBox;
             var outerCurve = outer.ToNurbsCurve();
 
+            //using (var propOuter = AreaMassProperties.Compute(outer.ToNurbsCurve()))
+            //{
+            //    if (propOuter == null || propOuter.Area < 1e-2)
+            //    {
+            //        _error = "Outer polyline has no area.";
+            //        return;
+            //    }
+            //}
+
             if (!outerCurve.TryGetPlane(out Plane outerPlane, 0.01))
             {
                 _error = "Outer polyline is not planar.";
@@ -68,6 +77,15 @@ namespace CgalUtilWrapper
                     _error = "An inner polyline is not closed.";
                     return;
                 }
+
+                //using (var propInner = AreaMassProperties.Compute(poly.ToNurbsCurve()))
+                //{
+                //    if (propInner == null || propInner.Area < 10)
+                //    {
+                //        _error = "An inner polyline has no area.";
+                //        return;
+                //    }
+                //}
 
                 if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
                 {
