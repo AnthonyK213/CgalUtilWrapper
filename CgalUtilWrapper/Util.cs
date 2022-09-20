@@ -2,16 +2,29 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using Rhino;
 using Rhino.Geometry;
+using Rhino.Geometry.Intersect;
 
 namespace CgalUtilWrapper
 {
+    public enum CurveContainment
+    {
+        Unset,
+        Inside,
+        Outside,
+        Contains,
+        Intersect,
+    }
+
     public static class Util
     {
         private const double TOL_LENGTH = 0.001;
+        private const double TOL_ANGLE = 0.1;
+        private const double TOL_OVERLAP = 0.001;
 
         /// <summary>
         /// 按照连续性炸开曲线
@@ -20,9 +33,9 @@ namespace CgalUtilWrapper
         /// <param name="continuity">怎么炸</param>
         /// <param name="tolerance">神ノ恩惠</param>
         /// <returns>碎尸</returns>
-        public static List<Curve> Explode(this Curve curve,
-                                          Continuity continuity = Continuity.G2_continuous,
-                                          double tolerance = -1)
+        public static Curve[] Explode(this Curve curve,
+                                      Continuity continuity = Continuity.G2_continuous,
+                                      double tolerance = -1)
         {
             if (tolerance < 0) continuity = Continuity.G2_continuous;
             List<Curve> curveList = new List<Curve>();
@@ -70,7 +83,7 @@ namespace CgalUtilWrapper
                     curveList.RemoveAt(0);
                 }
             }
-            return curveList;
+            return curveList.ToArray();
         }
 
         /// <summary>
@@ -104,6 +117,42 @@ namespace CgalUtilWrapper
             curve.Domain = new Interval(0, 1);
         }
 
+        public static CurveContainment Contains(this Polyline @this,
+                                                Polyline polyline,
+                                                Plane plane,
+                                                double tolerance = TOL_LENGTH,
+                                                double angleTolerance = TOL_ANGLE)
+        {
+            var curve0 = @this.ToPolylineCurve();
+            var curve1 = polyline.ToPolylineCurve();
 
+            if (!@this.IsClosed
+                || !curve0.TryGetPlane(out Plane plane0)
+                || plane0.Normal.IsParallelTo(plane.Normal, angleTolerance) == 0
+                || !curve1.TryGetPlane(out Plane plane1)
+                || plane1.Normal.IsParallelTo(plane.Normal, angleTolerance) == 0
+                || !(plane1.Origin - plane0.Origin).IsPerpendicularTo(plane.Normal, angleTolerance))
+            {
+                return CurveContainment.Unset;
+            }
+
+            if (Intersection.CurveCurve(curve0, curve1, TOL_LENGTH, TOL_OVERLAP).Any())
+            {
+                return CurveContainment.Intersect;
+            }
+
+            if (curve1.Contains(curve0.PointAtStart, plane, tolerance) == PointContainment.Inside)
+            {
+                return CurveContainment.Contains;
+            }
+            else if (curve0.Contains(curve1.PointAtStart, plane, tolerance) == PointContainment.Inside)
+            {
+                return CurveContainment.Inside;
+            }
+            else
+            {
+                return CurveContainment.Outside;
+            }
+        }
     }
 }

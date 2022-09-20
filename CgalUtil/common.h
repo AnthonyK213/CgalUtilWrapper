@@ -1,5 +1,11 @@
 ﻿#pragma once
 
+typedef struct Point2dArray
+{
+    double* vertices;
+    int verticesCount;
+} Point2dArray;
+
 typedef struct Point3dArray
 {
     double* coordinates;

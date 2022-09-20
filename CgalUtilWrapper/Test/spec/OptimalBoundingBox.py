@@ -5,8 +5,8 @@ import Rhino.Geometry as _geo
 
 mesh = mesh
 
-simpleMesh = _cuw.SimpleMesh(mesh)
+triMesh = _cuw.TriMesh(mesh)
 
-ok, obb = simpleMesh.CreateOptimalBoundingBox()
+ok, obb = triMesh.CreateOptimalBoundingBox()
 
-simpleMesh.Dispose()
+triMesh.Dispose()

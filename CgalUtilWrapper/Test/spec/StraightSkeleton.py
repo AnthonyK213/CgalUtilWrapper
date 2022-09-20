@@ -52,7 +52,7 @@ def GenerageEnvelope(bounds, skeleton):
             circles.append(_geo.Circle(_geo.Plane(pt, _geo.Plane.WorldXY.ZAxis), radius))
             if (lenSum == length):
                 break
-            lenSum = min(length, lenSum + radius)
+            lenSum = min(length, lenSum + max(radius, 10))
             pt = curve.PointAtLength(lenSum)
     return circles
 

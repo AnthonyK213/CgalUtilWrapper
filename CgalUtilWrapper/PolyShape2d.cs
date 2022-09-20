@@ -23,17 +23,7 @@ namespace CgalUtilWrapper
                 return;
             }
 
-            var outerBox = outer.BoundingBox;
             var outerCurve = outer.ToNurbsCurve();
-
-            //using (var propOuter = AreaMassProperties.Compute(outer.ToNurbsCurve()))
-            //{
-            //    if (propOuter == null || propOuter.Area < 1e-2)
-            //    {
-            //        _error = "Outer polyline has no area.";
-            //        return;
-            //    }
-            //}
 
             if (!outerCurve.TryGetPlane(out Plane outerPlane, 0.01))
             {
@@ -69,7 +59,6 @@ namespace CgalUtilWrapper
 
             foreach (Polyline poly in inner)
             {
-                var innerBox = poly.BoundingBox;
                 var innerCurve = poly.ToNurbsCurve();
 
                 if (!poly.IsClosed)
@@ -78,26 +67,16 @@ namespace CgalUtilWrapper
                     return;
                 }
 
-                //using (var propInner = AreaMassProperties.Compute(poly.ToNurbsCurve()))
-                //{
-                //    if (propInner == null || propInner.Area < 10)
-                //    {
-                //        _error = "An inner polyline has no area.";
-                //        return;
-                //    }
-                //}
-
                 if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
                 {
                     _error = "An inner polyline is not planar.";
                     return;
                 }
 
-                if (Intersection.CurveCurve(outerCurve, innerCurve, 0.1, 0.1).Any()
-                    || !outerBox.Contains(innerBox))
+                if (outer.Contains(poly, Plane.WorldXY) != CurveContainment.Inside)
                 {
                     _handle = IntPtr.Zero;
-                    _error = "Invalid position between outer polyline and inner polylines.";
+                    _error = "An inner polyline is not inside the outer polyline.";
                     return;
                 }
 
@@ -132,13 +111,11 @@ namespace CgalUtilWrapper
             {
                 for (int j = i + 1; j < inner.Count(); ++j)
                 {
-                    (Curve _a, Curve _b) = (inner.ElementAt(i).ToNurbsCurve(), inner.ElementAt(j).ToNurbsCurve());
-                    var _abb = inner.ElementAt(i).BoundingBox;
-                    var _bbb = inner.ElementAt(j).BoundingBox;
+                    var _apl = inner.ElementAt(i);
+                    var _bpl = inner.ElementAt(j);
+                    (Curve _a, Curve _b) = (_apl.ToNurbsCurve(), _bpl.ToNurbsCurve());
 
-                    if (Intersection.CurveCurve(_a, _b, 0.1, 0.1).Any()
-                        || _abb.Contains(_bbb)
-                        || _bbb.Contains(_abb))
+                    if (_apl.Contains(_bpl, Plane.WorldXY) != CurveContainment.Outside)
                     {
                         _handle = IntPtr.Zero;
                         _error = "Invalid position among inner polylines.";
@@ -155,19 +132,19 @@ namespace CgalUtilWrapper
                 {
                     fixed (double* vPtr = vArray)
                     {
-                        var outerPoly = new Poly2d(vPtr, outerVerticesCount);
-                        var holePolys = new Poly2d[inner.Count()];
+                        var outerPoly = new Point2dArray(vPtr, outerVerticesCount);
+                        var holePolys = new Point2dArray[inner.Count()];
                         int holeStartIndex = outerVerticesCount << 1;
 
                         for (int i = 0; i < inner.Count(); ++i)
                         {
-                            holePolys[i] = new Poly2d(&vPtr[holeStartIndex], innerVerticesCount[i]);
+                            holePolys[i] = new Point2dArray(&vPtr[holeStartIndex], innerVerticesCount[i]);
                             holeStartIndex += innerVerticesCount[i] << 1;
                         }
 
                         if (holePolys.Any())
                         {
-                            fixed (Poly2d* holesPtr = holePolys)
+                            fixed (Point2dArray* holesPtr = holePolys)
                             {
                                 _handle = PolyShape2dNew(&outerPoly, holesPtr, inner.Count());
                             }
@@ -196,7 +173,7 @@ namespace CgalUtilWrapper
                 return false;
             }
 
-            Poly2d outStraightSkeleton, outSpokes;
+            Point2dArray outStraightSkeleton, outSpokes;
 
             unsafe
             {
@@ -231,8 +208,8 @@ namespace CgalUtilWrapper
                 }
                 finally
                 {
-                    Poly2dFreeMembers(&outStraightSkeleton);
-                    Poly2dFreeMembers(&outSpokes);
+                    Point2dArray.Point2dArrayFreeMembers(&outStraightSkeleton);
+                    Point2dArray.Point2dArrayFreeMembers(&outSpokes);
                 }
             }
         }
@@ -245,32 +222,16 @@ namespace CgalUtilWrapper
 
         #region FFI
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe IntPtr PolyShape2dNew(Poly2d* outer, Poly2d* holes, int holesCount);
+        extern private static unsafe IntPtr PolyShape2dNew(Point2dArray* outer, Point2dArray* holes, int holesCount);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe int PolyShape2dGenerateStraightSkeleton(IntPtr handle, Poly2d* outStraightSkeleton, Poly2d* outSpokes);
+        extern private static unsafe int PolyShape2dGenerateStraightSkeleton(IntPtr handle, Point2dArray* outStraightSkeleton, Point2dArray* outSpokes);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static int PolyShape2dGenerateOffsetPolygon();
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static void PolyShape2dDrop(IntPtr handle);
-
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe void Poly2dFreeMembers(Poly2d* handle);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Poly2d
-        {
-            public readonly double* _vertices;
-            public readonly int _verticesCount;
-
-            public Poly2d(double* vertices, int verticesCount)
-            {
-                _vertices = vertices;
-                _verticesCount = verticesCount;
-            }
-        }
         #endregion
     }
 }

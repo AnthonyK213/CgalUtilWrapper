@@ -9,9 +9,9 @@ using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
-    public class SimpleMesh : GeoWrapperBase
+    public class TriMesh : GeoWrapperBase
     {
-        public SimpleMesh(Mesh mesh)
+        public TriMesh(Mesh mesh)
         {
             Mesh m = mesh.DuplicateMesh();
             m.Vertices.UseDoublePrecisionVertices = true;
@@ -62,8 +62,8 @@ namespace CgalUtilWrapper
                             var edges = new MeshEdges(ePtr, _edgesCount);
                             fixed (int* fPtr = _faces)
                             {
-                                var faces = new MeshFaces(fPtr, _facesCount);
-                                _handle = SimpleMeshNew(&vertices, &edges, &faces);
+                                var faces = new TriMeshFaces(fPtr, _facesCount);
+                                _handle = TriMeshNew(&vertices, &edges, &faces);
                             }
                         }
                     }
@@ -92,7 +92,7 @@ namespace CgalUtilWrapper
             {
                 try
                 {
-                    SimpleMeshCreateOptimalBoundingBox(_handle, &outCorners);
+                    TriMeshCreateOptimalBoundingBox(_handle, &outCorners);
                     for (int i = 0; i < outCorners._pointsCount; ++i)
                     {
                         corners[i] = new Point3d(
@@ -117,7 +117,7 @@ namespace CgalUtilWrapper
                 }
                 finally
                 {
-                    Point3dArrayFreeMembers(&outCorners);
+                    Point3dArray.Point3dArrayFreeMembers(&outCorners);
                 }
             }
         }
@@ -127,13 +127,13 @@ namespace CgalUtilWrapper
             hull = new Mesh();
 
             Point3dArray points;
-            MeshFaces faces;
+            TriMeshFaces faces;
 
             unsafe
             {
                 try
                 {
-                    SimpleMeshCreateConvexHull(_handle, &points, &faces);
+                    TriMeshCreateConvexHull(_handle, &points, &faces);
                     Point3d[] hullPoints = new Point3d[points._pointsCount];
                     int[] hullFaces = new int[faces._facesCount];
 
@@ -159,78 +159,33 @@ namespace CgalUtilWrapper
                 }
                 finally
                 {
-                    Point3dArrayFreeMembers(&points);
-                    MeshFacesFreeMembers(&faces);
+                    Point3dArray.Point3dArrayFreeMembers(&points);
+                    TriMeshFaces.TriMeshFacesFreeMembers(&faces);
                 }
             }
         }
 
         #region Finalize
-        ~SimpleMesh() => Gc();
+        ~TriMesh() => Gc();
 
-        protected override void DropManaged() => SimpleMeshDrop(_handle);
+        protected override void DropManaged() => TriMeshDrop(_handle);
         #endregion
 
         #region FFI
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private unsafe static IntPtr SimpleMeshNew(Point3dArray* vertices, MeshEdges* edges, MeshFaces* faces);
+        extern private unsafe static IntPtr TriMeshNew(Point3dArray* vertices, MeshEdges* edges, TriMeshFaces* faces);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe void SimpleMeshCreateOptimalBoundingBox(IntPtr handle, Point3dArray* corners);
+        extern private static unsafe void TriMeshCreateOptimalBoundingBox(IntPtr handle, Point3dArray* corners);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private unsafe static IntPtr SimpleMeshCreateConvexHull(IntPtr handle, Point3dArray* vertices, MeshFaces* faces);
+        extern private unsafe static IntPtr TriMeshCreateConvexHull(IntPtr handle, Point3dArray* vertices, TriMeshFaces* faces);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static void SimpleMeshDrop(IntPtr handle);
-
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe void Point3dArrayFreeMembers(Point3dArray* handle);
+        extern private static void TriMeshDrop(IntPtr handle);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private static unsafe void MeshEdgesFreeMembers(MeshEdges* handle);
-
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        extern private static unsafe void MeshFacesFreeMembers(MeshFaces* handle);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Point3dArray
-        {
-            public readonly double* _coordinates;
-            public readonly int _pointsCount;
-
-            public Point3dArray(double* coordinates, int pointsCount)
-            {
-                _coordinates = coordinates;
-                _pointsCount = pointsCount;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct MeshEdges
-        {
-            public readonly int* _edges;
-            public readonly int _edgesCount;
-
-            public MeshEdges(int* edges, int edgesCount)
-            {
-                _edges = edges;
-                _edgesCount = edgesCount;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct MeshFaces
-        {
-            public readonly int* _faces;
-            public readonly int _facesCount;
-
-            public MeshFaces(int* faces, int facesCount)
-            {
-                _faces = faces;
-                _facesCount = facesCount;
-            }
-        }
         #endregion
     }
 }

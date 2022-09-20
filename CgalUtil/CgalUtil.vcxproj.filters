@@ -24,10 +24,13 @@
     <ClInclude Include="PolyShape2d.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleMesh.h">
+    <ClInclude Include="TriMesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PointSet.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,10 +41,13 @@
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SimpleMesh.cpp">
+    <ClCompile Include="TriMesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="common.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PointSet.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

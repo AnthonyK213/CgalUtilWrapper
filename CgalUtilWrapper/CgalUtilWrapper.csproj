@@ -55,9 +55,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GeoWrapperBase.cs" />
+    <Compile Include="Point2dSet.cs" />
+    <Compile Include="Point3dSet.cs" />
     <Compile Include="PolyShape2d.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleMesh.cs" />
+    <Compile Include="TriMesh.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -5,8 +5,8 @@ import Rhino.Geometry as _geo
 
 mesh = mesh
 
-simpleMesh = _cuw.SimpleMesh(mesh)
+triMesh = _cuw.TriMesh(mesh)
 
-ok, hull = simpleMesh.CreateConvexHull()
+ok, hull = triMesh.CreateConvexHull()
 
-simpleMesh.Dispose()
+triMesh.Dispose()

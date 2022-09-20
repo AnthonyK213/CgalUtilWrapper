@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "PolyShape2d.h"
 
-PolyShape2d::PolyShape2d(Poly2d* outer, Poly2d* holes, int holesCount)
+PolyShape2d::PolyShape2d(Point2dArray* outer, Point2dArray* holes, int holesCount)
 {
     Polygon_2d outerPoly;
     isValid = true;
@@ -47,7 +47,7 @@ bool PolyShape2d::IsValid()
     return isValid;
 }
 
-int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* outSpokes)
+int PolyShape2d::GenerateStraightSkeleton(Point2dArray* outStraightSkeleton, Point2dArray* outSpokes)
 {
     boost::shared_ptr<Straight_Skeleton_2d> iss = CGAL::create_interior_straight_skeleton_2(poly);
     Straight_Skeleton_2d& ss = *iss;
@@ -84,7 +84,7 @@ int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* o
 
         if (startSkele && endSkele && i->is_inner_bisector())
         {
-            outStraightSkeleton->vertices[ssIndex * 4] = startPos.x();
+            outStraightSkeleton->vertices[ssIndex * 4 + 0] = startPos.x();
             outStraightSkeleton->vertices[ssIndex * 4 + 1] = startPos.y();
             outStraightSkeleton->vertices[ssIndex * 4 + 2] = endPos.x();
             outStraightSkeleton->vertices[ssIndex * 4 + 3] = endPos.y();
@@ -92,7 +92,7 @@ int PolyShape2d::GenerateStraightSkeleton(Poly2d* outStraightSkeleton, Poly2d* o
         }
         else
         {
-            outSpokes->vertices[bsIndex * 4] = startPos.x();
+            outSpokes->vertices[bsIndex * 4 + 0] = startPos.x();
             outSpokes->vertices[bsIndex * 4 + 1] = startPos.y();
             outSpokes->vertices[bsIndex * 4 + 2] = endPos.x();
             outSpokes->vertices[bsIndex * 4 + 3] = endPos.y();
@@ -112,13 +112,13 @@ int PolyShape2d::GenerateOffsetPolygon()
     return 0;
 }
 
-PolyShape2d* PolyShape2dNew(Poly2d* outer, Poly2d* holes, int holesCount)
+PolyShape2d* PolyShape2dNew(Point2dArray* outer, Point2dArray* holes, int holesCount)
 {
     PolyShape2d* handle = new PolyShape2d(outer, holes, holesCount);
     return handle->IsValid() ? handle : NULL;
 }
 
-int PolyShape2dGenerateStraightSkeleton(PolyShape2d* handle, Poly2d* outStraightSkeleton, Poly2d* outSpokes)
+int PolyShape2dGenerateStraightSkeleton(PolyShape2d* handle, Point2dArray* outStraightSkeleton, Point2dArray* outSpokes)
 {
     return handle->GenerateStraightSkeleton(outStraightSkeleton, outSpokes);
 }
@@ -136,7 +136,7 @@ void PolyShape2dDrop(PolyShape2d* handle)
     }
 }
 
-void Poly2dFreeMembers(Poly2d* handle)
+void Point2dArrayFreeMembers(Point2dArray* handle)
 {
     if (handle != nullptr)
     {
