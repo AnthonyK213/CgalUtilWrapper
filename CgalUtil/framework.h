@@ -10,10 +10,15 @@
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/Polygon_with_holes_2.h>
 #include <CGAL/Polyhedron_3.h>
+#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/convex_hull_2.h>
 #include <CGAL/convex_hull_3.h>
 #include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
+#include <CGAL/min_quadrilateral_2.h>
 #include <CGAL/optimal_bounding_box.h>
+#include <CGAL/Convex_hull_traits_adapter_2.h>
+#include <CGAL/Min_quadrilateral_traits_2.h>
 #include <boost/shared_ptr.hpp>
 #include <cassert>
 #include <vector>

@@ -68,7 +68,12 @@
     <None Include="Test\spec\config.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Test\spec\BoundingCircle.py" />
+    <Content Include="Test\spec\BoundingRectangle.py" />
+    <Content Include="Test\spec\ConvexHull%282%29.py" />
+    <Content Include="Test\spec\ConvexHull%28Points%29.py" />
     <Content Include="Test\spec\ConvexHull.py" />
+    <Content Include="Test\spec\OptimalBoundingBox%28Points%29.py" />
     <Content Include="Test\spec\OptimalBoundingBox.py" />
     <Content Include="Test\spec\StraightSkeleton.py" />
   </ItemGroup>
