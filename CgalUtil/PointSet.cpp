@@ -78,24 +78,24 @@ void Point2dSetCreateConvexHull(Point2dArray* points, Point2dArray* convexHull)
     }
 }
 
-//void Point3dSetCreateBoundingSphere(Point3dArray* points, double& x, double& y, double& z, double& r)
-//{
-//    std::vector<Point_3d> pointList;
-//
-//    for (int i = 0; i < points->pointsCount; ++i)
-//    {
-//        pointList.push_back(Point_3d(points->coordinates[3 * i + 0],
-//                                     points->coordinates[3 * i + 1],
-//                                     points->coordinates[3 * i + 2]));
-//    }
-//
-//    Min_Sphere_Of_Spheres_D ms(pointList.begin(), pointList.end());
-//
-//    x = *ms.center_cartesian_begin();
-//    y = *(ms.center_cartesian_begin() + 1);
-//    z = *(ms.center_cartesian_begin() + 2);
-//    r = ms.radius();
-//}
+void Point3dSetCreateBoundingSphere(Point3dArray* points, double& x, double& y, double& z, double& r)
+{
+    std::vector<Point_3d> pointList;
+
+    for (int i = 0; i < points->pointsCount; ++i)
+    {
+        pointList.push_back(Point_3d(points->coordinates[3 * i + 0],
+                                     points->coordinates[3 * i + 1],
+                                     points->coordinates[3 * i + 2]));
+    }
+
+    Min_Sphere_Of_Spheres_D_3 ms(pointList.begin(), pointList.end());
+
+    x = *ms.center_cartesian_begin();
+    y = *(ms.center_cartesian_begin() + 1);
+    z = *(ms.center_cartesian_begin() + 2);
+    r = ms.radius();
+}
 
 void Point3dSetCreateConvexHull(Point3dArray* points, Point3dArray* vertices, TriMeshFaces* faces)
 {

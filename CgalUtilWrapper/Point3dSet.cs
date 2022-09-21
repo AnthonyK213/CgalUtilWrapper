@@ -23,7 +23,7 @@ namespace CgalUtilWrapper
             return coordinates;
         }
 
-        public static bool CreateBoundingCircle(IEnumerable<Point3d> points, out Sphere sphere)
+        public static bool CreateBoundingSphere(IEnumerable<Point3d> points, out Sphere sphere)
         {
             sphere = Sphere.Unset;
             Point3dArray point3dArray;
