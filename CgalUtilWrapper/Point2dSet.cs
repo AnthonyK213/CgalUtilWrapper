@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
+using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
@@ -41,9 +42,9 @@ namespace CgalUtilWrapper
             }
         }
  
-        public static bool CreateBoundingRectangle(IEnumerable<Point2d> points, out Polyline rectangle)
+        public static bool CreateBoundingRectangle(IEnumerable<Point2d> points, out Rectangle3d rectangle)
         {
-            rectangle = new Polyline();
+            rectangle = Rectangle3d.Unset;
             Point2dArray point2dArray;
             double[] coordinates = new double[points.Count() * 2];
             for (int i = 0; i < points.Count(); i++)
@@ -62,11 +63,20 @@ namespace CgalUtilWrapper
                     {
                         point2dArray = new Point2dArray(coordinatesPtr, points.Count());
                         Point2dSetCreateBoundingRectangle(&point2dArray, &poly);
+                        List<Point3d> corners = new List<Point3d>();
                         for (int i = 0; i < poly._verticesCount; ++i)
                         {
-                            rectangle.Add(new Point3d(poly._vertices[2 * i + 0],
-                                                      poly._vertices[2 * i + 1], 0));
+                            corners.Add(new Point3d(poly._vertices[2 * i + 0], poly._vertices[2 * i + 1], 0));
                         }
+                        if (corners.Count != 4) return false;
+                        Point3d center = 0.5 * (corners[0] + corners[2]);
+                        Vector3d xAxis = corners[1] - corners[0];
+                        Vector3d yAxis = corners[2] - corners[1];
+                        if (xAxis.Length < yAxis.Length) (xAxis, yAxis) = (yAxis, xAxis);
+                        double xLen = 0.5 * xAxis.Length;
+                        double yLen = 0.5 * yAxis.Length;
+                        yAxis = Vector3d.CrossProduct(Plane.WorldXY.ZAxis, xAxis);
+                        rectangle = new Rectangle3d(new Plane(center, xAxis, yAxis), new Interval(-xLen, xLen), new Interval(-yLen, yLen));
                         return true;
                     }
                 }
