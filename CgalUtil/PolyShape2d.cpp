@@ -130,7 +130,7 @@ int PolyShape2dGenerateOffsetPolygon()
 
 void PolyShape2dDrop(PolyShape2d* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
         delete handle;
     }
@@ -138,10 +138,13 @@ void PolyShape2dDrop(PolyShape2d* handle)
 
 void Point2dArrayFreeMembers(Point2dArray* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
-        delete handle->vertices;
-        handle->vertices = nullptr;
+        if (nullptr != handle->vertices)
+        {
+            delete handle->vertices;
+            handle->vertices = nullptr;
+        }
         handle->verticesCount = 0;
     }
 }

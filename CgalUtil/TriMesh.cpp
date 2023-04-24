@@ -96,7 +96,7 @@ void TriMeshCreateConvexHull(TriMesh* handle, Point3dArray* vertices, TriMeshFac
 
 void TriMeshDrop(TriMesh* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
         delete handle;
     }
@@ -104,20 +104,26 @@ void TriMeshDrop(TriMesh* handle)
 
 void MeshEdgesFreeMembers(MeshEdges* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
-        delete handle->edges;
-        handle->edges = nullptr;
+        if (nullptr != handle->edges)
+        {
+            delete handle->edges;
+            handle->edges = nullptr;
+        }
         handle->edgesCount = 0;
     }
 }
 
 void TriMeshFacesFreeMembers(TriMeshFaces* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
-        delete handle->faces;
-        handle->faces = nullptr;
+        if (nullptr != handle->faces)
+        {
+            delete handle->faces;
+            handle->faces = nullptr;
+        }
         handle->facesCount = 0;
     }
 }

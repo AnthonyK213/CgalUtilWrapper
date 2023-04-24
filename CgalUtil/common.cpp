@@ -2,10 +2,13 @@
 
 void Point3dArrayFreeMembers(Point3dArray* handle)
 {
-    if (handle != nullptr)
+    if (nullptr != handle)
     {
-        delete handle->coordinates;
-        handle->coordinates = nullptr;
+        if (nullptr != handle->coordinates)
+        {
+            delete handle->coordinates;
+            handle->coordinates = nullptr;
+        }
         handle->pointsCount = 0;
     }
 }
