@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CgalUtilWrapper": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

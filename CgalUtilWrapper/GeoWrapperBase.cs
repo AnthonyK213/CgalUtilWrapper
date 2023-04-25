@@ -53,12 +53,12 @@ namespace CgalUtilWrapper
         protected virtual void Gc()
         {
             Dispose(false);
-            GC.SuppressFinalize(this);
         }
 
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
     }
