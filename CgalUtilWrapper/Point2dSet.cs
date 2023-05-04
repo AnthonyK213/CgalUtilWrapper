@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
-using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
@@ -131,6 +128,7 @@ namespace CgalUtilWrapper
             }
         }
 
+        #region FFI
         [DllImport(GeoWrapperBase.DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private unsafe static void Point2dSetCreateBoundingCircle(Point2dArray* points, ref double x, ref double y, ref double r);
 
@@ -139,5 +137,6 @@ namespace CgalUtilWrapper
 
         [DllImport(GeoWrapperBase.DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private unsafe static void Point2dSetCreateConvexHull(Point2dArray* points, Point2dArray* convexHull);
+        #endregion
     }
 }

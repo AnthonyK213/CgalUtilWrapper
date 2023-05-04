@@ -60,8 +60,6 @@ shape = _cuw.PolyShape2d(outer, inner)
 
 ok, straightSkeleton, spokes = shape.GenerateStraightSkeleton()
 
-print(shape.Error)
-
 shape.Dispose()
 
 straightSkeleton = RemoveDuplicateLines(straightSkeleton)

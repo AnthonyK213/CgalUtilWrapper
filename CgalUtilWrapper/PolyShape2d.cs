@@ -1,43 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
 using Rhino.Geometry.Intersect;
-using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
     public class PolyShape2d : GeoWrapperBase
     {
-        public PolyShape2d(Polyline outer, IEnumerable<Polyline> inner)
+        public PolyShape2d(Polyline outer, IEnumerable<Polyline> inner) : base(true)
         {
-            int outerVerticesCount = 0;
+            int outerVerticesCount;
             List<int> innerVerticesCount = new List<int>();
             List<double> vertices = new List<double>();
 
             if (!outer.IsClosed)
-            {
-                _error = "Outer polyline is not closed.";
-                return;
-            }
+                throw new Exception("Outer polyline is not closed.");
 
             var outerCurve = outer.ToNurbsCurve();
 
+            if (Intersection.CurveSelf(outerCurve, 0.01).Any())
+                throw new Exception("Outer polyline has self intersection.");
+
             if (!outerCurve.TryGetPlane(out Plane outerPlane, 0.01))
-            {
-                _error = "Outer polyline is not planar.";
-                return;
-            }
+                throw new Exception("Outer polyline is not planar.");
 
             int outerPara = Brep.CreatePlanarBreps(outerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
 
             if (outerPara == 0 || Math.Abs(outerPlane.OriginZ) > 1e-8)
-            {
-                _error = "Outer polyline is not in WorldXY plane.";
-                return;
-            }
+                throw new Exception("Outer polyline is not in WorldXY plane.");
             else if (outerPara == 1)
             {
                 for (int i = 0; i < outer.Count - 1; ++i)
@@ -59,34 +51,24 @@ namespace CgalUtilWrapper
 
             foreach (Polyline poly in inner)
             {
+                if (!poly.IsClosed)
+                    throw new Exception("An inner polyline is not closed.");
+
                 var innerCurve = poly.ToNurbsCurve();
 
-                if (!poly.IsClosed)
-                {
-                    _error = "An inner polyline is not closed.";
-                    return;
-                }
+                if (Intersection.CurveSelf(innerCurve, 0.01).Any())
+                    throw new Exception("An inner polyline has self intersection.");
 
                 if (!innerCurve.TryGetPlane(out Plane innerPlane, 0.01))
-                {
-                    _error = "An inner polyline is not planar.";
-                    return;
-                }
+                    throw new Exception("An inner polyline is not planar.");
 
                 if (outer.Contains(poly, Plane.WorldXY) != CurveContainment.Inside)
-                {
-                    _handle = IntPtr.Zero;
-                    _error = "An inner polyline is not inside the outer polyline.";
-                    return;
-                }
+                    throw new Exception("An inner polyline is not inside the outer polyline.");
 
                 int innerPara = Brep.CreatePlanarBreps(innerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
 
                 if (innerPara == 0 || Math.Abs(innerPlane.OriginZ) > 1e-8)
-                {
-                    _error = "An inner polyline is not in WorldXY plane.";
-                    return;
-                }
+                    throw new Exception("An inner polyline is not in WorldXY plane.");
                 else if (innerPara == 1)
                 {
                     for (int i = poly.Count - 1; i >= 1; --i)
@@ -113,14 +95,8 @@ namespace CgalUtilWrapper
                 {
                     var _apl = inner.ElementAt(i);
                     var _bpl = inner.ElementAt(j);
-                    (Curve _a, Curve _b) = (_apl.ToNurbsCurve(), _bpl.ToNurbsCurve());
-
                     if (_apl.Contains(_bpl, Plane.WorldXY) != CurveContainment.Outside)
-                    {
-                        _handle = IntPtr.Zero;
-                        _error = "Invalid position among inner polylines.";
-                        return;
-                    }
+                        throw new Exception("Invalid position among inner polylines.");
                 }
             }
 
@@ -146,19 +122,18 @@ namespace CgalUtilWrapper
                         {
                             fixed (Point2dArray* holesPtr = holePolys)
                             {
-                                _handle = PolyShape2dNew(&outerPoly, holesPtr, inner.Count());
+                                handle = PolyShape2dNew(&outerPoly, holesPtr, inner.Count());
                             }
                         }
                         else
                         {
-                            _handle = PolyShape2dNew(&outerPoly, null, 0);
+                            handle = PolyShape2dNew(&outerPoly, null, 0);
                         }
                     }
                 }
                 catch
                 {
-                    _handle = IntPtr.Zero;
-                    _error = "Unknown error.";
+                    return;
                 }
             }
         }
@@ -168,7 +143,7 @@ namespace CgalUtilWrapper
             straightSkeleton = new List<Line>();
             spokes = new List<Line>();
 
-            if (IsDisposed || !IsValid)
+            if (IsClosed)
             {
                 return false;
             }
@@ -179,7 +154,7 @@ namespace CgalUtilWrapper
             {
                 try
                 {
-                    int code = PolyShape2dGenerateStraightSkeleton(_handle, &outStraightSkeleton, &outSpokes);
+                    int code = PolyShape2dGenerateStraightSkeleton(handle, &outStraightSkeleton, &outSpokes);
 
                     if (code != 0)
                     {
@@ -214,11 +189,11 @@ namespace CgalUtilWrapper
             }
         }
 
-        #region Finalize
-        ~PolyShape2d() => Gc();
-
-        protected override void DropUnmanaged() => PolyShape2dDrop(_handle);
-        #endregion
+        protected override bool ReleaseHandle()
+        {
+            PolyShape2dDrop(handle);
+            return true;
+        }
 
         #region FFI
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]

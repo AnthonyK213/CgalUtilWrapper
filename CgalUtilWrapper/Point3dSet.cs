@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
 
 namespace CgalUtilWrapper
 {
-    public class Point3dSet : GeoWrapperBase
+    public class Point3dSet
     {
         private static double[] PointsToDoubleArray(IEnumerable<Point3d> points)
         {
@@ -148,13 +145,15 @@ namespace CgalUtilWrapper
             }
         }
 
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        #region FFI
+        [DllImport(GeoWrapperBase.DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private unsafe static void Point3dSetCreateConvexHull(Point3dArray* points, Point3dArray* vertices, TriMeshFaces* faces);
 
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(GeoWrapperBase.DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private unsafe static void Point3dSetCreateBoundingSphere(Point3dArray* points, ref double x, ref double y, ref double z, ref double r);
 
-        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(GeoWrapperBase.DLL, CallingConvention = CallingConvention.Cdecl)]
         extern private unsafe static void Point3dSetCreateOptimalBoundingBox(Point3dArray* points, Point3dArray* corners);
+        #endregion
     }
 }

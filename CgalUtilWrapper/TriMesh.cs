@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
-using System.Security.Policy;
 
 namespace CgalUtilWrapper
 {
     public class TriMesh : GeoWrapperBase
     {
-        public TriMesh(Mesh mesh)
+        public TriMesh(Mesh mesh) : base(true)
         {
             Mesh m = mesh.DuplicateMesh();
             m.Vertices.UseDoublePrecisionVertices = true;
@@ -23,11 +19,7 @@ namespace CgalUtilWrapper
             m.RebuildNormals();
 
             if (!m.IsValid || !m.IsClosed)
-            {
-                _handle = IntPtr.Zero;
-                _error = "Mesh is not valid.";
-                return;
-            }
+                throw new Exception("Mesh is not valid.");
 
             int _verticesCount = m.Vertices.Count;
             double[] _vertices = new double[_verticesCount * 3];
@@ -63,15 +55,14 @@ namespace CgalUtilWrapper
                             fixed (int* fPtr = _faces)
                             {
                                 var faces = new TriMeshFaces(fPtr, _facesCount);
-                                _handle = TriMeshNew(&vertices, &edges, &faces);
+                                handle = TriMeshNew(&vertices, &edges, &faces);
                             }
                         }
                     }
                 }
                 catch
                 {
-                    _handle = IntPtr.Zero;
-                    _error = "Unknown error.";
+                    return;
                 }
             }
         }
@@ -81,10 +72,8 @@ namespace CgalUtilWrapper
             box = Box.Empty;
             Point3d[] corners = new Point3d[8];
 
-            if (IsDisposed || !IsValid)
-            {
+            if (IsClosed)
                 return false;
-            }
 
             Point3dArray outCorners;
 
@@ -92,7 +81,7 @@ namespace CgalUtilWrapper
             {
                 try
                 {
-                    TriMeshCreateOptimalBoundingBox(_handle, &outCorners);
+                    TriMeshCreateOptimalBoundingBox(handle, &outCorners);
                     for (int i = 0; i < outCorners._pointsCount; ++i)
                     {
                         corners[i] = new Point3d(
@@ -133,7 +122,7 @@ namespace CgalUtilWrapper
             {
                 try
                 {
-                    TriMeshCreateConvexHull(_handle, &points, &faces);
+                    TriMeshCreateConvexHull(handle, &points, &faces);
                     Point3d[] hullPoints = new Point3d[points._pointsCount];
                     int[] hullFaces = new int[faces._facesCount];
 
@@ -165,11 +154,11 @@ namespace CgalUtilWrapper
             }
         }
 
-        #region Finalize
-        ~TriMesh() => Gc();
-
-        protected override void DropManaged() => TriMeshDrop(_handle);
-        #endregion
+        protected override bool ReleaseHandle()
+        {
+            TriMeshDrop(handle);
+            return true;
+        }
 
         #region FFI
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
