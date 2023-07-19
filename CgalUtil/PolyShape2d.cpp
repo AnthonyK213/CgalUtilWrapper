@@ -50,28 +50,26 @@ bool PolyShape2d::IsValid()
 int PolyShape2d::GenerateStraightSkeleton(Point2dArray* outStraightSkeleton, Point2dArray* outSpokes)
 {
     boost::shared_ptr<Straight_Skeleton_2d> iss = CGAL::create_interior_straight_skeleton_2(poly);
-    Straight_Skeleton_2d& ss = *iss;
 
     if (!iss->is_valid())
     {
         return 1;
     }
 
-    outStraightSkeleton->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
-    outStraightSkeleton->vertices = new double[outStraightSkeleton->verticesCount];
+    outStraightSkeleton->verticesCount = iss->size_of_halfedges() * 2;  // edges * 2 (start and end)
+    outStraightSkeleton->vertices = new double[outStraightSkeleton->verticesCount * 2];
 
-    outSpokes->verticesCount = ss.size_of_halfedges() * 2 * 2;  // edges * 2 (start and end) * 2 (X and Y)
-    outSpokes->vertices = new double[outSpokes->verticesCount];
+    outSpokes->verticesCount = iss->size_of_halfedges() * 2;  // edges * 2 (start and end)
+    outSpokes->vertices = new double[outSpokes->verticesCount * 2];
 
-    // Copy vertex pairs
     int ssIndex = 0;
     int bsIndex = 0;
-    for (Straight_Skeleton_2d::Halfedge_const_iterator i = ss.halfedges_begin(); i != ss.halfedges_end(); ++i)
+    for (auto it = iss->halfedges_begin(); it != iss->halfedges_end(); ++it)
     {
-        auto start = i->vertex();
-        auto end = i->opposite()->vertex();
+        auto start = it->vertex();
+        auto end = it->opposite()->vertex();
 
-        if (!i->is_bisector())
+        if (!it->is_bisector())
         {
             continue;
         }
@@ -82,7 +80,7 @@ int PolyShape2d::GenerateStraightSkeleton(Point2dArray* outStraightSkeleton, Poi
         bool startSkele = start->is_skeleton();
         bool endSkele = end->is_skeleton();
 
-        if (startSkele && endSkele && i->is_inner_bisector())
+        if (startSkele && endSkele && it->is_inner_bisector())
         {
             outStraightSkeleton->vertices[ssIndex * 4 + 0] = startPos.x();
             outStraightSkeleton->vertices[ssIndex * 4 + 1] = startPos.y();
@@ -100,7 +98,6 @@ int PolyShape2d::GenerateStraightSkeleton(Point2dArray* outStraightSkeleton, Poi
         }
     }
 
-    //Set the sizes
     outStraightSkeleton->verticesCount = ssIndex * 2;
     outSpokes->verticesCount = bsIndex * 2;
 
@@ -142,7 +139,7 @@ void Point2dArrayFreeMembers(Point2dArray* handle)
     {
         if (nullptr != handle->vertices)
         {
-            delete handle->vertices;
+            delete[] handle->vertices;
             handle->vertices = nullptr;
         }
         handle->verticesCount = 0;
