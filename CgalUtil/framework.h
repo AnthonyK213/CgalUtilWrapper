@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #define WIN32_LEAN_AND_MEAN
+#define CGAL_EIGEN3_ENABLED
 #define CU_API extern "C" _declspec(dllexport)
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>

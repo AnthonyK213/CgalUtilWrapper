@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "builtin-baseline": "1e334d770ac71a89d1c36d51019e60dd08b68f76",
+  "dependencies": [
+    {
+      "name": "cgal",
+      "host": true
+    },
+    {
+      "name": "eigen3",
+      "host": true
+    }
+  ],
+  "overrides": [
+    {
+      "name": "cgal",
+      "version": "5.5.2"
+    },
+    {
+      "name": "eigen3",
+      "version": "3.4.0#2"
+    }
+  ]
+}
