@@ -3,7 +3,7 @@
 PolyShape2d::PolyShape2d(Point2dArray *outer, Point2dArray *holes,
                          int holesCount) {
   Polygon_2d outerPoly;
-  isValid = true;
+  m_isValid = false;
 
   for (int i = 0; i < outer->verticesCount; ++i) {
     outerPoly.push_back(
@@ -11,11 +11,10 @@ PolyShape2d::PolyShape2d(Point2dArray *outer, Point2dArray *holes,
   }
 
   if (!outerPoly.is_counterclockwise_oriented()) {
-    isValid = false;
     return;
   }
 
-  poly = Polygon_2d_With_Holes(outerPoly);
+  m_poly = Polygon_2d_With_Holes(outerPoly);
 
   for (int i = 0; i < holesCount; ++i) {
     Polygon_2d hole;
@@ -26,22 +25,23 @@ PolyShape2d::PolyShape2d(Point2dArray *outer, Point2dArray *holes,
     }
 
     if (!hole.is_clockwise_oriented()) {
-      isValid = false;
       return;
     }
 
-    poly.add_hole(hole);
+    m_poly.add_hole(hole);
   }
+
+  m_isValid = false;
 }
 
 PolyShape2d::~PolyShape2d() {}
 
-bool PolyShape2d::IsValid() { return isValid; }
+bool PolyShape2d::IsValid() { return m_isValid; }
 
 int PolyShape2d::GenerateStraightSkeleton(Point2dArray *outStraightSkeleton,
                                           Point2dArray *outSpokes) {
   boost::shared_ptr<Straight_Skeleton_2d> iss =
-      CGAL::create_interior_straight_skeleton_2(poly);
+      CGAL::create_interior_straight_skeleton_2(m_poly);
 
   if (!iss->is_valid()) {
     return 1;

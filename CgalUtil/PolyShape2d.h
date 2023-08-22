@@ -16,7 +16,7 @@ public:
   int GenerateOffsetPolygon();
 
 private:
-  bool isValid;
+  bool m_isValid;
 
-  Polygon_2d_With_Holes poly;
+  Polygon_2d_With_Holes m_poly;
 };

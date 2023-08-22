@@ -26,7 +26,10 @@ namespace CgalUtilWrapper
       if (!outerCurve.TryGetPlane(out Plane outerPlane, 0.01))
         throw new Exception("Outer polyline is not planar.");
 
-      int outerPara = Brep.CreatePlanarBreps(outerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
+      int outerPara = Brep.CreatePlanarBreps(outerCurve, 0.01)[0]
+                          .Faces[0]
+                          .NormalAt(0.5, 0.5)
+                          .IsParallelTo(Plane.WorldXY.ZAxis, 1e-8);
 
       if (outerPara == 0 || Math.Abs(outerPlane.OriginZ) > 1e-8)
         throw new Exception("Outer polyline is not in WorldXY plane.");
@@ -65,7 +68,10 @@ namespace CgalUtilWrapper
         if (outer.Contains(poly, Plane.WorldXY) != CurveContainment.Inside)
           throw new Exception("An inner polyline is not inside the outer polyline.");
 
-        int innerPara = Brep.CreatePlanarBreps(innerCurve, 0.01)[0].Faces[0].NormalAt(0.5, 0.5).IsParallelTo(Plane.WorldXY.ZAxis, 0.1);
+        int innerPara = Brep.CreatePlanarBreps(innerCurve, 0.01)[0]
+                            .Faces[0]
+                            .NormalAt(0.5, 0.5)
+                            .IsParallelTo(Plane.WorldXY.ZAxis, 1e-8);
 
         if (innerPara == 0 || Math.Abs(innerPlane.OriginZ) > 1e-8)
           throw new Exception("An inner polyline is not in WorldXY plane.");

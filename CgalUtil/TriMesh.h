@@ -13,5 +13,5 @@ public:
   void CreateConvexHull(Point3dArray *vertices, TriMeshFaces *faces);
 
 private:
-  Surface_Mesh_3d mesh;
+  Surface_Mesh_3d m_mesh;
 };

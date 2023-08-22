@@ -160,13 +160,14 @@ void Point3dArrayFreeMembers(Point3dArray *handle) {
 
 PolyShape2d *PolyShape2dNew(Point2dArray *outer, Point2dArray *holes,
                             int holesCount) {
-  PolyShape2d *handle = new PolyShape2d(outer, holes, holesCount);
-  return handle->IsValid() ? handle : nullptr;
+  return new PolyShape2d(outer, holes, holesCount);
 }
 
 int PolyShape2dGenerateStraightSkeleton(PolyShape2d *handle,
                                         Point2dArray *outStraightSkeleton,
                                         Point2dArray *outSpokes) {
+  if (nullptr == handle)
+    return -1;
   return handle->GenerateStraightSkeleton(outStraightSkeleton, outSpokes);
 }
 
@@ -180,8 +181,7 @@ void PolyShape2dDrop(PolyShape2d *handle) {
 
 TriMesh *TriMeshNew(Point3dArray *vertices, MeshEdges *edges,
                     TriMeshFaces *faces) {
-  TriMesh *handle = new TriMesh(vertices, edges, faces);
-  return handle;
+  return new TriMesh(vertices, edges, faces);
 }
 
 void TriMeshCreateOptimalBoundingBox(TriMesh *handle, Point3dArray *corners) {
