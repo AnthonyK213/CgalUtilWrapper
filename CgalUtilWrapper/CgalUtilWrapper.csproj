@@ -1,12 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="RhinoCommon" Version="7.0.20314.3001" />
-  </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="Copy $(TargetPath) $(SolutionDir)x64\$(ConfigurationName)\" />
-  </Target>
+    <Import Project=".\CgalUtilWrapper.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="RhinoCommon" Version="7.0.20314.3001" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(ProjectDir)\bin\native\$(Configuration)\**">
+            <Pack>True</Pack>
+            <Visible>False</Visible>
+            <PackagePath>runtimes</PackagePath>
+        </None>
+
+        <None Include="$(ProjectDir)$(PackageId).targets">
+            <Pack>True</Pack>
+            <Visible>False</Visible>
+            <PackagePath>build\$(PackageId).targets</PackagePath>
+        </None>
+
+        <ContentWithTargetPath Include="$(ProjectDir)\bin\native\$(Configuration)\**">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <TargetPath>%(Filename)%(Extension)</TargetPath>
+        </ContentWithTargetPath>
+    </ItemGroup>
+
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+      <Exec Command="xcopy /i /e /s /y /f &quot;$(SolutionDir)\x64\$(Configuration)\*.dll&quot; &quot;$(ProjectDir)\bin\native\$(Configuration)\&quot;" />
+    </Target>
 </Project>

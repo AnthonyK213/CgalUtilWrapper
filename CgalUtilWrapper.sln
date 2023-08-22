@@ -3,7 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgalUtilWrapper", "CgalUtilWrapper\CgalUtilWrapper.csproj", "{EEF53054-1A07-47B8-A315-C672FBA0F97E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgalUtilWrapper", "CgalUtilWrapper\CgalUtilWrapper.csproj", "{EEF53054-1A07-47B8-A315-C672FBA0F97E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0B96BD87-E316-4789-BA5D-B246119035F3} = {0B96BD87-E316-4789-BA5D-B246119035F3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CgalUtil", "CgalUtil\CgalUtil.vcxproj", "{0B96BD87-E316-4789-BA5D-B246119035F3}"
 EndProject
