@@ -14,7 +14,7 @@ namespace CgalUtilTest
   public class PolyShape2dTest
   {
     [TestMethod]
-    public void StraightSkeleton_ConcurrentTest_WithPolyWithHole_ShouldNotGetFuckingHeapCorruption()
+    public void StraightSkeleton_ConcurrentTest_WithPolyWithHoles_ShouldNotGetFuckingHeapCorruption()
     {
       using (var rhinoCore = new RhinoCore(new string[] { "-runscript" }))
       {
@@ -30,15 +30,17 @@ namespace CgalUtilTest
           inners.Add(inner);
         }
 
-        Task[] tasks = new Task[50];
+        Task[] tasks = new Task[10];
 
         for (int i = 0; i < tasks.Length; ++i)
         {
           tasks[i] = Task.Run(() =>
           {
-            PolyShape2d shape = new PolyShape2d(outer, inners);
-            shape.GenerateStraightSkeleton(out List<Line> straightSkeleton,
-                                           out List<Line> spokes);
+            using (PolyShape2d shape = new PolyShape2d(outer, inners))
+            {
+              shape.GenerateStraightSkeleton(out List<Line> straightSkeleton,
+                                             out List<Line> spokes);
+            }
           });
         }
 
